@@ -8,16 +8,18 @@
 
 import UIKit
 import RealmSwift
+import UserNotifications
 
 class InputViewController: UIViewController {
 
-    @IBOutlet weak var datePicker: UIDatePicker!
-    @IBOutlet weak var contentsTextView: UITextView!
+    @IBOutlet weak var categoryTextField: UITextField!
     @IBOutlet weak var titleTextField: UITextField!
+    @IBOutlet weak var contentsTextView: UITextView!
+    @IBOutlet weak var datePicker: UIDatePicker!
     
     var task: Task!
-    let realm = try! Realm()
-    
+    var realm: Realm!
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -25,20 +27,27 @@ class InputViewController: UIViewController {
         
         self.view.addGestureRecognizer(tapGesture)
         
+        categoryTextField.text = task.category
         titleTextField.text = task.title
         contentsTextView.text = task.contents
         datePicker.date = task.date
         
         // Do any additional setup after loading the view.
+        
+        realm = try! Realm()
+
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         try! realm.write {
+            self.task.category = self.categoryTextField.text!
             self.task.title = self.titleTextField.text!
             self.task.contents = self.contentsTextView.text
             self.task.date = self.datePicker.date
             self.realm.add(self.task, update: true)
         }
+        
+        setNotification(task: task)
         
         super.viewWillDisappear(animated)
     }
@@ -57,5 +66,46 @@ class InputViewController: UIViewController {
         // Pass the selected object to the new view controller.
     }
     */
+    
+    
+    func setNotification(task: Task) {
+        let content = UNMutableNotificationContent()
+        
+        if task.title == "" {
+            content.title = "(タイトルなし)"
+        }else {
+            content.title = "[\(task.category)]\(task.title)]"
+        }
+        
+        if task.contents == "" {
+            content.body = "(内容なし)"
+        } else {
+            content.body = task.contents
+        }
+        
+        content.sound = UNNotificationSound.default
+        
+        // ローカル通知が発動するトリガー（日付マッチ）を作成
+        let calendar = Calendar.current
+        let dateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: task.date)
+        let trigger = UNCalendarNotificationTrigger.init(dateMatching: dateComponents, repeats: false)
+        
+        // ローカル通知を作成
+        let request = UNNotificationRequest.init(identifier: String(task.id), content: content, trigger: trigger)
+        
+        // ローカル通知を登録
+        let center = UNUserNotificationCenter.current()
+        center.add(request) {
+            (error) in print(error ?? "ローカル通知登録 OK")
+        }
+        
+        center.getPendingNotificationRequests{ (requests: [UNNotificationRequest]) in
+            for request in requests {
+                print("----")
+                print(request)
+                print("----")
+            }
+        }
+    }
 
 }

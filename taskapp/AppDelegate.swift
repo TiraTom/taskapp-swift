@@ -7,17 +7,59 @@
 //
 
 import UIKit
+import UserNotifications
+import RealmSwift
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
     var window: UIWindow?
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        // ユーザに通知許可を取る
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.alert, .sound]) {
+            (granted, error) in
+            // Enable or disable features based on authorization
+        }
+        
+        // Delegeteのメソッドが実行された時の通知先は自分に設定
+        center.delegate = self
+        
+        
+        
+        // マイグレーション処理
+        let config = Realm.Configuration(
+            
+            schemaVersion: 1,
+            
+            
+            migrationBlock: { migration, oldSchemaVersion in
+                if (oldSchemaVersion < 1) {
+                    
+                }
+        })
+        
+        Realm.Configuration.defaultConfiguration = config
+        
+        // Renew 
+        _ = try! Realm()
+        
+        
         return true
     }
+    
+    
+    //  アプリフがフォアグラウンドの時に通知を受け取ると呼ばれるメソッド
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.sound, .alert])
+    }
+    
+    
+    
 
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
