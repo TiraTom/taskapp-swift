@@ -35,6 +35,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         //何も入力されていなくてもReturnキーを押せるようにする。
         searchBar.enablesReturnKeyAutomatically = false
         
+
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {

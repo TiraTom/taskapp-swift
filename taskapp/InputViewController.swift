@@ -10,12 +10,23 @@ import UIKit
 import RealmSwift
 import UserNotifications
 
-class InputViewController: UIViewController {
+class InputViewController: UIViewController, UITextFieldDelegate {
 
     @IBOutlet weak var categoryTextField: UITextField!
     @IBOutlet weak var titleTextField: UITextField!
     @IBOutlet weak var contentsTextView: UITextView!
     @IBOutlet weak var datePicker: UIDatePicker!
+    @IBOutlet weak var registerButton: UIButton!
+    
+    @IBAction func registerButton(_ sender: Any) {
+        registerTask()
+        setNotification(task: task)
+        
+        // メイン画面に戻る
+        let VC1 = self.storyboard!.instantiateViewController(withIdentifier: "viewController") as! ViewController
+        let navController = UINavigationController(rootViewController: VC1)
+        self.present(navController, animated:true, completion: nil)
+    }
     
     var task: Task!
     var realm: Realm!
@@ -36,19 +47,29 @@ class InputViewController: UIViewController {
         
         realm = try! Realm()
 
+        // タイトルが空の場合はボタンを押せないようにする
+        if self.titleTextField.text == "" {
+            self.registerButton.isEnabled = false
+        } else {
+            self.registerButton.isEnabled = true
+        }
+        
+        // タイトルの入力を監視する
+        titleTextField.delegate = self
+        
+        // コンテンツ入力欄の枠の色
+        contentsTextView.layer.borderColor = UIColor.lightGray.cgColor
+        
+        // コンテンツ入力欄の枠の幅
+        contentsTextView.layer.borderWidth = 0.3
+        
+        // コンテンツ入力欄の枠を角丸にする
+        contentsTextView.layer.cornerRadius = 10.0
+        contentsTextView.layer.masksToBounds = true
+
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        try! realm.write {
-            self.task.category = self.categoryTextField.text!
-            self.task.title = self.titleTextField.text!
-            self.task.contents = self.contentsTextView.text
-            self.task.date = self.datePicker.date
-            self.realm.add(self.task, update: true)
-        }
-        
-        setNotification(task: task)
-        
         super.viewWillDisappear(animated)
     }
     
@@ -57,6 +78,38 @@ class InputViewController: UIViewController {
         view.endEditing(true)
     }
 
+    func registerTask() {
+        try! realm.write {
+            
+            if self.task.category == "" {
+                self.task.category = "(カテゴリなし)"
+            }else {
+                self.task.category = self.categoryTextField.text!
+            }
+            
+            if self.task.title == "" {
+                self.task.category = "(タイトルなし)"
+            }else {
+                self.task.title = self.titleTextField.text!
+            }
+            
+            self.task.contents = self.contentsTextView.text
+            self.task.date = self.datePicker.date
+            self.realm.add(self.task, update: true)
+        }
+    }
+    
+    
+    // タイトル（必須項目）が入力されたら登録ボタンを押せるようにする
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        if string == "" {
+            self.registerButton.isEnabled = false
+        } else {
+            self.registerButton.isEnabled = true
+        }
+        
+        return true
+    }
     /*
     // MARK: - Navigation
 
