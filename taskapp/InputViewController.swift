@@ -18,6 +18,10 @@ class InputViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var datePicker: UIDatePicker!
     @IBOutlet weak var registerButton: UIButton!
     
+    var task: Task!
+    var realm: Realm!
+    
+
     @IBAction func registerButton(_ sender: Any) {
         registerTask()
         setNotification(task: task)
@@ -28,9 +32,6 @@ class InputViewController: UIViewController, UITextFieldDelegate {
         self.present(navController, animated:true, completion: nil)
     }
     
-    var task: Task!
-    var realm: Realm!
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -81,14 +82,14 @@ class InputViewController: UIViewController, UITextFieldDelegate {
     func registerTask() {
         try! realm.write {
             
-            if self.task.category == "" {
+            if self.categoryTextField.text == "" {
                 self.task.category = "(カテゴリなし)"
             }else {
                 self.task.category = self.categoryTextField.text!
             }
             
-            if self.task.title == "" {
-                self.task.category = "(タイトルなし)"
+            if self.titleTextField.text == "" {
+                self.task.title = "(タイトルなし)"
             }else {
                 self.task.title = self.titleTextField.text!
             }
