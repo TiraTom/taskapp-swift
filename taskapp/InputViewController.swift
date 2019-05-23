@@ -23,13 +23,32 @@ class InputViewController: UIViewController, UITextFieldDelegate {
     
 
     @IBAction func registerButton(_ sender: Any) {
-        registerTask()
-        setNotification(task: task)
         
-        // メイン画面に戻る
-        let VC1 = self.storyboard!.instantiateViewController(withIdentifier: "viewController") as! ViewController
-        let navController = UINavigationController(rootViewController: VC1)
-        self.present(navController, animated:true, completion: nil)
+        // タイトルが空の時はアラートを出して登録を行わない
+        
+        if (self.titleTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)! {
+            // UIAlertControllerクラスのインスタンス作成
+            let alert: UIAlertController = UIAlertController(title: "Message from TaskApp", message: "Title is required.",  preferredStyle: UIAlertController.Style.alert)
+            
+            // Actionの設定
+            let okAction: UIAlertAction = UIAlertAction(title: "OK", style: UIAlertAction.Style.default)
+            
+            // UIAlertControllerにActionを追加
+            alert.addAction(okAction)
+            
+            // Alertを表示
+            present(alert, animated: true, completion: nil)
+        
+        } else {
+
+            // タイトルに値が入っていれば登録
+            registerTask()
+            setNotification(task: task)
+
+            // メイン画面に戻る
+            navigationController?.popViewController(animated: true)
+        }
+        
     }
     
     override func viewDidLoad() {
@@ -47,16 +66,9 @@ class InputViewController: UIViewController, UITextFieldDelegate {
         // Do any additional setup after loading the view.
         
         realm = try! Realm()
-
-        // タイトルが空の場合はボタンを押せないようにする
-        if self.titleTextField.text == "" {
-            self.registerButton.isEnabled = false
-        } else {
-            self.registerButton.isEnabled = true
-        }
         
-        // タイトルの入力を監視する
-        titleTextField.delegate = self
+//        // タイトルの入力を監視する
+//        titleTextField.delegate = self
         
         // コンテンツ入力欄の枠の色
         contentsTextView.layer.borderColor = UIColor.lightGray.cgColor
@@ -82,13 +94,13 @@ class InputViewController: UIViewController, UITextFieldDelegate {
     func registerTask() {
         try! realm.write {
             
-            if self.categoryTextField.text == "" {
+            if (self.categoryTextField.text?.isEmpty)! {
                 self.task.category = "(カテゴリなし)"
             }else {
                 self.task.category = self.categoryTextField.text!
             }
             
-            if self.titleTextField.text == "" {
+            if (self.titleTextField.text?.isEmpty)! {
                 self.task.title = "(タイトルなし)"
             }else {
                 self.task.title = self.titleTextField.text!
@@ -101,16 +113,20 @@ class InputViewController: UIViewController, UITextFieldDelegate {
     }
     
     
-    // タイトル（必須項目）が入力されたら登録ボタンを押せるようにする
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        if string == "" {
-            self.registerButton.isEnabled = false
-        } else {
-            self.registerButton.isEnabled = true
-        }
-        
-        return true
-    }
+//    // タイトル（必須項目）が入力されたら登録ボタンを押せるようにする
+//    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+//        if self.titleTextField.text == "" {
+//            self.registerButton.isEnabled = false
+//        } else {
+//            self.registerButton.isEnabled = true
+//        }
+//
+//        return true
+//    }
+    
+    
+    
+    
     /*
     // MARK: - Navigation
 
@@ -128,7 +144,7 @@ class InputViewController: UIViewController, UITextFieldDelegate {
         if task.title == "" {
             content.title = "(タイトルなし)"
         }else {
-            content.title = "[\(task.category)]\(task.title)]"
+            content.title = "[\(task.category)]\(task.title)"
         }
         
         if task.contents == "" {
@@ -161,5 +177,19 @@ class InputViewController: UIViewController, UITextFieldDelegate {
             }
         }
     }
+    
+    
+    @objc func ChangeRegisterButtonEnable(sender: NSNotification){
+        if self.titleTextField.text == "" {
+            self.registerButton.isEnabled = false
+        } else {
+            self.registerButton.isEnabled = true
+        }
+    }
+    
+
 
 }
+
+
+
